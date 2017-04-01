@@ -1,39 +1,52 @@
-
-
 import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib
+from mpl_toolkits.mplot3d import Axes3D
 
-# TODO: Load up the dataset
-# Ensuring you set the appropriate header column names
+# Look pretty...
+matplotlib.style.use('ggplot')
+
+
 #
+# TODO: Load up the Seeds Dataset into a Dataframe
+# It's located at 'Datasets/wheat.data'
+# 
 # .. your code here ..
-df = pd.read_csv('Datasets/servo.data', names = ['motor', 'screw', 'pgain', 'vgain', 'class'])
-print (df)
+df = pd.read_csv('Datasets/wheat.data')
+print df.head(6)
 
-# TODO: Create a slice that contains all entries having a vgain equal to 5. Then print the 
-# length of (# of samples in) that slice:
+
+fig = plt.figure()
 #
+# TODO: Create a new 3D subplot using fig. Then use the subplot to graph a 3D scatter plot using the area,
+# perimeter and asymmetry features. Be sure to use the optional display parameter c='red', and also label your axes.
+# 
 # .. your code here ..
-slice1 = df[df.vgain == 5]
-print (slice1)
-print (len(slice1))
+ax = fig.add_subplot(111, projection = '3d')
+ax.set_xlabel('area')
+ax.set_ylabel('perimeter')
+ax.set_zlabel('asymmetry')
+ax.scatter(df['area'], df['perimeter'], df['asymmetry'], c='red', marker='.')
 
 
-# TODO: Create a slice that contains all entries having a motor equal to E and screw equal
-# to E. Then print the length of (# of samples in) that slice:
+fig = plt.figure()
 #
+# TODO: Create a new 3D subplot using fig. Then use the subplot to graph a 3D scatter plot using the width,
+# groove and length features. Be sure to use the optional display parameter c='green', and also label your axes.
+# 
 # .. your code here ..
-slice2 = df[(df.motor == 'E') & (df.screw == 'E')]
-print (slice2)
-print (len(slice2))
-
-# TODO: Create a slice that contains all entries having a pgain equal to 4. Use one of the
-# various methods of finding the mean vgain value for the samples in that slice. Once
-# you've found it, print it:
-#
-# .. your code here ..
-slice3 = df[df.pgain == 4]
-print (slice3.mean())
+ax1 = fig.add_subplot(111, projection = '3d')
+ax1.set_xlabel('width')
+ax1.set_ylabel('groove')
+ax1.set_zlabel('asymmetry')
+ax1.scatter(df['area'], df['perimeter'], df['asymmetry'], c='green', marker='.')
 
 
-# TODO: (Bonus) See what happens when you run the .dtypes method on your dataframe!
-print (df.dtypes)
+plt.show()
+
+# Questions:
+# Which of the plots seems more compact / less spread out?
+# Groove x Length x Width
+
+# Which of the plots were you able to identify two outliers within, that stuck out from the samples?
+# Groove x Length x Width
