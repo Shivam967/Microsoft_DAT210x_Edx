@@ -1,110 +1,98 @@
+#
+# TODO: Import whatever needs to be imported to make this work
+#
+# .. your code here ..
 import pandas as pd
+from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 import matplotlib
-import datetime
-
-from mpl_toolkits.mplot3d import Axes3D
-from plyfile import PlyData, PlyElement
+matplotlib.style.use('ggplot') # Look Pretty
 
 
-# Every 100 data samples, we save 1. If things run too slow, try increasing this number. If things run too fast,
-# try decreasing it... =)
-reduce_factor = 130
+#
+# TODO: To procure the dataset, follow these steps:
+# 1. Navigate to: https://data.cityofchicago.org/Public-Safety/Crimes-2001-to-present/ijzp-q8t2
+# 2. In the 'Primary Type' column, click on the 'Menu' button next to the info button,
+#    and select 'Filter This Column'. It might take a second for the filter option to
+#    show up, since it has to load the entire list first.
+# 3. Scroll down to 'GAMBLING'
+# 4. Click the light blue 'Export' button next to the 'Filter' button, and select 'Download As CSV'
+
+#
+# TODO: Load your dataset after importing Pandas
+#
+# .. your code here ..
+df1 = pd.read_csv('Datasets/Crimes_-_2001_to_present.csv')
+
+#
+# TODO: Drop any ROWs with nans in them
+#
+# .. your code here ..
+df1.dropna(axis = 0, how = 'any', inplace = True)
+
+#
+# TODO: Print out the dtypes of your dset
+#
+# .. your code here ..
+print df1.dtypes
+
+#
+# Coerce the 'Date' feature (which is currently a string object) into real date,
+# and confirm by re-printing the dtypes. NOTE: This is a slow process...
+#
+# .. your code here ..
+df1.Date = pd.to_datetime(df1.Date) # Converts the entries in the 'Date' column to datetime64[ns]
+print df1.dtypes
 
 
-# Look pretty...
-matplotlib.style.use('ggplot')
+def doKMeans(dataframe):
 
-
-# Load up the scanned armadillo
-plyfile = PlyData.read('Datasets/stanford_armadillo.ply')
-armadillo = pd.DataFrame({
-  'x':plyfile['vertex']['z'][::reduce_factor],
-  'y':plyfile['vertex']['x'][::reduce_factor],
-  'z':plyfile['vertex']['y'][::reduce_factor]
-})
-
-
-
-def do_PCA(armadillo):
   #
-  # TODO: Write code to import the libraries required for PCA. Then, train your PCA on the armadillo dataframe. Finally,
-  # drop one dimension (reduce it down to 2D) and project the armadillo down to the 2D principal component feature space.
-  #
-  # NOTE: Be sure to RETURN your projected armadillo! 
-  # (This projection is actually stored in a NumPy NDArray and not a Pandas dataframe, which is something Pandas does for
-  # you automatically. =)
-  #
-  # .. your code here ..
-  from sklearn.decomposition import PCA
-  pca = PCA(n_components=2)
-  pca.fit(armadillo)
-  T = pca.transform(armadillo)
-  return T
-
-
-def do_RandomizedPCA(armadillo):
-  #
-  # TODO: Write code to import the libraries required for RandomizedPCA. Then, train your RandomizedPCA on the armadillo
-  # dataframe. Finally, drop one dimension (reduce it down to 2D) and project the armadillo down to the 2D principal component
-  # feature space.
-  #
-  # NOTE: Be sure to RETURN your projected armadillo! 
-  # (This projection is actually stored in a NumPy NDArray and not a Pandas dataframe, which is something Pandas does for
-  # you automatically. =)
+  # TODO: Filter dataframe so that you're only looking at Longitude and Latitude,
+  # since the remaining columns aren't really applicable for this purpose.
   #
   # .. your code here ..
-  from sklearn.decomposition import RandomizedPCA
-  rpca = RandomizedPCA(n_components = 2)
-  rpca.fit(armadillo)
-  R = rpca.transform(armadillo)
-  return R
+  df = pd.concat([dataframe.Longitude, dataframe.Latitude], axis = 1)
 
-
-
-# Render the Original Armadillo
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-ax.set_title('Armadillo 3D')
-ax.set_xlabel('X')
-ax.set_ylabel('Y')
-ax.set_zlabel('Z')
-ax.scatter(armadillo.x, armadillo.y, armadillo.z, c='green', marker='.', alpha=0.75)
-
-
-
-# Render the newly transformed PCA armadillo!
-t1 = datetime.datetime.now()
-pca = do_PCA(armadillo)
-time_delta = datetime.datetime.now() - t1
-if not pca is None:
+  #
+  # INFO: Plot your data with a '.' marker, with 0.3 alpha at the Latitude and Longitude locations in your dataset.
+  # Longitude = x, Latitude = y!
   fig = plt.figure()
   ax = fig.add_subplot(111)
-  ax.set_title('PCA, build time: ' + str(time_delta))
-  ax.scatter(pca[:,0], pca[:,1], c='blue', marker='.', alpha=0.75)
+  ax.scatter(x = df.Longitude, y = df.Latitude, marker='.', alpha=0.3, s = 30)
+
+  #
+  # TODO: Use K-Means to try and find seven cluster centers in this dataframe.
+  #
+  # .. your code here ..
+  kmeans_model = KMeans(n_clusters = 7, init = 'random', n_init = 60, max_iter = 360, random_state = 43)
+  labels = kmeans_model.fit_predict(df)
+
+  #
+  # INFO: Print and plot the centroids...
+  centroids = kmeans_model.cluster_centers_
+  ax.scatter(x = centroids[:,0], y = centroids[:,1], marker='x', c='red', alpha=0.7, linewidths=3, s = 120)
+  print centroids
 
 
+# INFO: Print & Plot your data
+doKMeans(df1)
 
-# Render the newly transformed RandomizedPCA armadillo!
-t1 = datetime.datetime.now()
-rpca = do_RandomizedPCA(armadillo)
-time_delta = datetime.datetime.now() - t1
-if not rpca is None:
-  fig = plt.figure()
-  ax = fig.add_subplot(111)
-  ax.set_title('RandomizedPCA, build time: ' + str(time_delta))
-  ax.scatter(rpca[:,0], rpca[:,1], c='red', marker='.', alpha=0.75)
+#
+# TODO: Filter out the data so that it only contains samples that have a Date > '2011-01-01', using indexing. Then,
+# in a new figure, plot the crime incidents, as well as a new K-Means run's centroids.
+#
+# .. your code here ..
+df2 = df1[df1.Date > '2011-01-01']
 
-
+# INFO: Print & Plot your data
+doKMeans(df2)
+plt.title("Dates limited to 2011 and later")
 plt.show()
 
 # Lab Questions:
+# Did your centroid locations change after you limited the date range to +2011?
+# Only Slightly...
 #
-# What direction was the armadillo's head facing?
-# Left
-#
-# Were you able to discern any visual differences between the transformed PCA results and the transformed RandomizedPCA results?
-# No, they pretty much looked the same to me
-#
-# Which executed faster, RandomizedPCA or PCA?
-# RandomizedPCA
+# What about during successive runs of your assignment? Any centroid location changes happened there?
+# All clusters have moved but only slightly, and the centroid arrangement still has the same shape for the most part.
